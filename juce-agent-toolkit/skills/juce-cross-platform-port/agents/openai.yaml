@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Cross Platform Port"
+  short_description: "Audit and plan JUCE cross-platform porting work"
+  default_prompt: "Use $juce-cross-platform-port to audit or plan JUCE plugin porting work across macOS, Windows, and Linux."

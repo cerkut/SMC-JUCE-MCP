@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Project Create"
+  short_description: "Create a new project from JUCE-Plugin-Starter"
+  default_prompt: "Use $juce-project-create to create a new JUCE plugin project from JUCE-Plugin-Starter."

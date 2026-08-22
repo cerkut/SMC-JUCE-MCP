@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Build Release"
+  short_description: "Guide JUCE starter build, test, sign, and publish flows"
+  default_prompt: "Use $juce-build-release to help run JUCE-Plugin-Starter build, test, signing, packaging, or publish workflows across macOS, Windows, and Linux."

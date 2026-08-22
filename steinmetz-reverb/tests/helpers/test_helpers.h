@@ -1,0 +1,21 @@
+#pragma once
+#include <PluginProcessor.h>
+
+// Helper to run test code within the context of a plugin editor.
+// Creates a processor, opens its editor, runs the test, then cleans up.
+//
+// Example usage:
+//   runWithinPluginEditor ([&] (SteinmetzReverbAudioProcessor& plugin) {
+//       auto* editor = plugin.getActiveEditor();
+//       REQUIRE (editor != nullptr);
+//   });
+[[maybe_unused]] static void runWithinPluginEditor (const std::function<void (SteinmetzReverbAudioProcessor& plugin)>& testCode)
+{
+    SteinmetzReverbAudioProcessor plugin;
+    const auto editor = plugin.createEditorIfNeeded();
+
+    testCode (plugin);
+
+    plugin.editorBeingDeleted (editor);
+    delete editor;
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE CI Release"
+  short_description: "Guide JUCE starter CI, release, and secret workflows"
+  default_prompt: "Use $juce-ci-release to help with JUCE-Plugin-Starter CI, GitHub Actions, release notes, or signing-secret workflows."

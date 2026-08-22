@@ -1,0 +1,147 @@
+# JUCE Plugin Starter - AI Assistant Guidelines
+
+This file provides guidelines for AI tools (like Cursor, Claude, etc.) when working with the JUCE Plugin Starter project.
+
+## 📁 Project Structure Guidelines
+
+### Script Organization
+- **All scripts** should be placed in `/scripts/` directory for consistency
+- **Test scripts** should be placed in `/scripts/tests/` directory (if created)
+- **Build scripts** (post_build.sh, build.sh, bump_version.py) belong in `/scripts/`
+- **Main project scripts** (generate_and_open_xcode.sh, init_plugin_project.sh, dependencies.sh) belong in `/scripts/`
+- **Documentation** should be placed in `/scripts/about/` directory
+
+### File Naming Conventions
+- Use **snake_case** for script files (e.g., `setup_uv_environment.sh`)
+- Use **descriptive names** that clearly indicate the script's purpose
+- Add `.example` suffix for template files (e.g., `postinstall.example`)
+- Test files should follow pattern: `test_phase{N}.sh`
+
+## 🔧 Code Structure Guidelines
+
+### Environment Variable Handling
+- Always load `.env` file at the beginning of scripts
+- Use `set -o allexport; source .env; set +o allexport` pattern
+- Validate required environment variables before proceeding
+- Provide clear error messages for missing variables
+- **Required variables**: PROJECT_NAME, PROJECT_BUNDLE_ID (minimum for build system)
+- **Version variables**: VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD
+- **Apple signing**: APPLE_ID, APP_CERT, INSTALLER_CERT, TEAM_ID, APP_PASSWORD
+
+### Script Best Practices
+- Start scripts with `#!/bin/bash` or `#!/usr/bin/env bash`
+- Use `set -e` to exit on errors
+- Include descriptive echo statements for user feedback
+- Use emoji prefixes for better UX (🚀, ✅, ❌, ⚠️, 📁, etc.)
+
+### Error Handling
+- Always check if required files/directories exist before operations
+- Provide helpful error messages with suggested solutions
+- Use appropriate exit codes (0 for success, 1+ for errors)
+
+## 🔨 Build System Guidelines
+
+### Unified Build System (`scripts/build.sh`)
+- **Primary build tool**: Use `scripts/build.sh` for all build operations
+- **Supports targets**: `all`, `au`, `vst3`, `standalone`
+- **Supports actions**: `local`, `test`, `sign`, `notarize`, `publish`
+- **Requires .env**: Always validate environment configuration before building
+- **Example usage**: `./scripts/build.sh vst3 test` or `./scripts/build.sh all publish`
+
+### Version Management (`scripts/bump_version.py`)
+- **Semantic versioning**: Uses MAJOR.MINOR.PATCH.BUILD format
+- **Auto-increment**: Build numbers increment automatically
+- **Manual control**: Use `--major`, `--minor`, `--patch` for manual version bumps
+- **Integration**: Works with CMake and Xcode project generation
+- **Environment**: Reads/writes version info to .env file
+
+### Legacy Build Support
+- **scripts/generate_and_open_xcode.sh**: Available for direct Xcode project generation
+- **Version integration**: Now includes automatic version management
+- **Skip options**: Use `SKIP_VERSION_BUMP=1` and `SKIP_CMAKE_REGEN=1` for faster iterations
+
+### Additional Tools
+- **validate_plugin.sh**: Comprehensive plugin validation and testing
+- **diagnose_plugin.sh**: Plugin diagnostic and troubleshooting tool
+- **generate_release_notes.py**: AI-powered release notes from git history
+- **Documentation**: Complete build system docs in `scripts/about/build_system.md`
+
+## 📋 Testing Guidelines
+
+### Test Script Structure
+- Each phase should have its own test file: `test_phase{N}.sh`
+- Tests should be self-contained and not depend on external state
+- Use temporary directories for testing to avoid affecting the main project
+- Clean up test artifacts after completion
+
+### Test Validation Patterns
+- Check file existence before testing content
+- Validate script executability with `[[ -x "script.sh" ]]`
+- Test environment variable loading and validation
+- Verify script output and behavior
+
+## 📄 Third-Party License Management
+
+### License Acknowledgement Requirements
+- **Always** update `installer/THIRD_PARTY_LICENSES.md` when adding or removing third-party tools
+- **Include** proper attribution with tool name, version, license type, and copyright notice
+- **Maintain** alphabetical ordering of acknowledgements for easy reference
+- **Verify** license compatibility before adding new dependencies
+- **Document** the specific use case for each third-party tool
+
+### License File Maintenance
+- Use the standardized markdown format in `installer/THIRD_PARTY_LICENSES.md`
+- Include direct links to original license texts when available
+- Update the "Last Updated" timestamp when making changes
+- Ensure all tools referenced in scripts are properly acknowledged
+
+## 🎯 AI Assistant Behavior
+
+### When Suggesting Changes
+- **Always** place new test scripts in `scripts/tests/` (if created)
+- **Always** place new utility scripts in `scripts/`
+- **Always** place main project scripts (init, generate, dependencies) in `scripts/`
+- **Place** documentation in `scripts/about/`
+- **Prefer** modifying existing scripts over creating new ones
+- **Validate** that suggested file paths exist in the project
+- **Update** third-party license acknowledgements when adding/removing tools
+
+### Code Generation Guidelines
+- Follow existing code style and patterns in the project
+- Use consistent error handling patterns
+- Include appropriate comments for complex logic
+- Maintain backward compatibility when possible
+
+### File Path References
+- Use **relative paths** from project root in documentation
+- Use **absolute paths** in scripts when necessary
+- Update **all references** when moving files
+- Check for **hidden references** in comments and documentation
+
+## 🔄 Workflow Guidelines
+
+### Script Refactoring
+1. **Identify** all references to scripts being moved
+2. **Move** the scripts to appropriate directories
+3. **Update** all references in code, documentation, and tests
+4. **Test** functionality after moves
+5. **Validate** with comprehensive test suite
+
+### Adding New Features
+1. **Plan** the feature implementation
+2. **Create** or modify necessary scripts
+3. **Update** environment variable examples if needed
+4. **Add** comprehensive tests
+5. **Update** documentation
+6. **Update** third-party license acknowledgements if applicable
+
+## 🚨 Important Notes
+
+- **Never** break existing functionality when refactoring
+- **Always** test changes thoroughly
+- **Maintain** consistent coding style throughout the project
+- **Document** any new environment variables in `.env.example`
+- **Consider** backward compatibility for existing users
+- **Ensure** proper license compliance for all third-party tools
+
+These guidelines help ensure consistent, maintainable, and user-friendly code across the JUCE Plugin Starter project.

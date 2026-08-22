@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Setup Visage"
+  short_description: "Set up Visage GPU UI in an existing JUCE starter project"
+  default_prompt: "Use $juce-setup-visage to add or repair Visage GPU UI setup in a JUCE-Plugin-Starter project."

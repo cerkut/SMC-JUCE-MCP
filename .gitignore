@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Local knowledge-graph cache (regenerate with `graphify update .`)
+graphify-out/
+
+# Python virtual environments (regenerate per README setup instructions)
+.libtorch-venv/
+.book-to-skill-venv/
+
+# Local build scratch
+.audiopluginhost-build/
+
+# Large external reference repos, not required for generation — see README
+# for their upstream clone URLs if you want them locally.
+ai-enhanced-audio-book/
+agent-skills/
+juce-docs-mcp-server/
+JuceMCP-for-agents/
+.agents/
+
+# Nested cache inside a vendored dir
+juce-agent-toolkit/graphify-out/
+
+# Python bytecode cache
+__pycache__/
+*.pyc

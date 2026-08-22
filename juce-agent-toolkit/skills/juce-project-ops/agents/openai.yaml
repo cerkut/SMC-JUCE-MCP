@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Project Ops"
+  short_description: "Status, VM, and website operations for JUCE starter repos"
+  default_prompt: "Use $juce-project-ops for JUCE-Plugin-Starter project status checks, VM registry work, or GitHub Pages website operations."

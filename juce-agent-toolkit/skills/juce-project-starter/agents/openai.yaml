@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Project Starter"
+  short_description: "Guide JUCE-Plugin-Starter setup, config, and builds"
+  default_prompt: "Use $juce-project-starter when working with JUCE-Plugin-Starter setup, .env configuration, build targets, placeholder replacement, or VST3 MIDI generator behavior."

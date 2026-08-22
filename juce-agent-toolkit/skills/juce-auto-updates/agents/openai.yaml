@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Auto Updates"
+  short_description: "Set up or validate Sparkle and WinSparkle updater flows"
+  default_prompt: "Use $juce-auto-updates to add, validate, or repair auto-update support in a JUCE-Plugin-Starter project."

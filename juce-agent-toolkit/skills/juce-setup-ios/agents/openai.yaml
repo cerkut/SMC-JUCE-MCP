@@ -1,0 +1,4 @@
+interface:
+  display_name: "JUCE Setup iOS"
+  short_description: "Add or repair iOS app support in a JUCE starter project"
+  default_prompt: "Use $juce-setup-ios to add or repair an iOS or iPadOS app target in a JUCE-Plugin-Starter project."
