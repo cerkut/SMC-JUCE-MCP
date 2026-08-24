@@ -4,6 +4,9 @@
 # Local knowledge-graph cache (regenerate with `graphify update .`)
 graphify-out/
 
+# graphify's `add` scratch dir (holds fetched papers/pages before merging into the graph)
+raw/
+
 # Python virtual environments (regenerate per README setup instructions)
 .libtorch-venv/
 .book-to-skill-venv/
@@ -11,15 +14,19 @@ graphify-out/
 # Local build scratch
 .audiopluginhost-build/
 
-# Large external reference repos, not required for generation — see README
-# for their upstream clone URLs if you want them locally.
-ai-enhanced-audio-book/
+# Generated plugin projects are local build artifacts — never committed.
+# Regenerate them from a prompt (see README/CLAUDE.md) rather than restoring
+# from git history.
+demo-plugin/
+steinmetz-reverb/
+s-rave/
+
+# Not a submodule — a Pure Data/plugdata skill unrelated to JUCE plugin
+# generation. Clone separately if wanted: github.com/shortwavlabs/agent-skills
 agent-skills/
-juce-docs-mcp-server/
-JuceMCP-for-agents/
 .agents/
 
-# Nested cache inside a vendored dir
+# Nested cache inside a submodule
 juce-agent-toolkit/graphify-out/
 
 # Python bytecode cache

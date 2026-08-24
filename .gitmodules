@@ -1,0 +1,15 @@
+[submodule "JUCE-Plugin-Starter"]
+	path = JUCE-Plugin-Starter
+	url = https://github.com/danielraffel/JUCE-Plugin-Starter.git
+[submodule "juce-agent-toolkit"]
+	path = juce-agent-toolkit
+	url = https://github.com/danielraffel/juce-agent-toolkit.git
+[submodule "ai-enhanced-audio-book"]
+	path = ai-enhanced-audio-book
+	url = https://github.com/yeeking/ai-enhanced-audio-book.git
+[submodule "juce-docs-mcp-server"]
+	path = juce-docs-mcp-server
+	url = https://github.com/danielraffel/juce-docs-mcp-server.git
+[submodule "JuceMCP-for-agents"]
+	path = JuceMCP-for-agents
+	url = https://github.com/stefbil/JuceMCP-for-agents.git
