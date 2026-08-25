@@ -18,9 +18,16 @@ README.md).
 
 ## Generating a plugin
 
-Two paths, both ending the same way: a new top-level `<plugin-name>/`
+Three paths, all ending the same way: a new top-level `<plugin-name>/`
 directory scaffolded from `JUCE-Plugin-Starter/`, built with CMake/Ninja, and
-tested with Catch2.
+tested with Catch2. Works the same way on macOS, Windows, and Linux — see
+"Cross-platform CMake snippets" below for the canonical patterns any
+neural-FX plugin needs to actually build on all three.
+
+Use `uv` for any Python tooling a generated plugin or this workflow needs
+(`uv venv`, `uv pip install`, `uv tool install`) — not plain `pip`/
+`python -m venv`. See README.md's "One-time setup: libtorch" for the exact
+commands.
 
 **From a prompt.** The user describes the DSP/behavior they want. Scaffold via:
 ```bash
@@ -53,6 +60,86 @@ paper (e.g. `arxiv:2408.16546`) and its code (e.g.
    inference via a lock-protected queue + a background `juce::Thread` worker;
    never call `torch::jit::script::Module` methods directly on the audio
    thread if inference could be slow.
+
+**Targeting Unity.** `Unity` is a first-class, built-in `FORMATS` value for
+JUCE's `juce_add_plugin()` (confirmed against the JUCE 8.0.12 this repo
+pins) — no external Unity SDK or Editor download is needed to *build* it;
+JUCE reimplements the necessary parts of Unity's Native Audio Plugin API
+itself (`juce_audio_plugin_client_Unity.cpp` +
+`Unity/juce_UnityPluginInterface.h`, both self-contained).
+1. In the generated project's `CMakeLists.txt`, add `Unity` to the
+   `PLUGIN_FORMATS`/`FORMATS` list (same list `AU`/`VST3`/`Standalone` are
+   already in).
+2. **Set `PRODUCT_NAME` to something with no hyphens** (e.g. `MyPlugin`, not
+   `my-plugin`) whenever `Unity` is in the format list. Confirmed by an
+   actual build: JUCE's generated Unity C# glue script uses `PRODUCT_NAME`
+   verbatim as a C# class name (`public class {PRODUCT_NAME}GUI : ...`), and
+   hyphens are illegal in C# identifiers — a hyphenated product name (the
+   scaffolding script's default) produces a `.cs` file that fails to compile
+   inside Unity. `PROJECT_NAME` (the folder/CMake target name) can keep its
+   hyphen; only `PRODUCT_NAME` needs to change if they're set to different
+   values.
+3. Keep the plugin a pure audio effect — `IS_MIDI_EFFECT FALSE`,
+   `NEEDS_MIDI_INPUT/OUTPUT FALSE` (already how every plugin generated here
+   is configured; Unity's native audio callback has no MIDI path).
+4. Build the `<ProjectName>_Unity` target. Output: `.bundle` (macOS,
+   installs by default to `~/Library/Audio/Plug-Ins/Unity/`), `.dll`
+   (Windows, `%APPDATA%/Unity`), `.so` (Linux, `~/.unity`) — plus an
+   auto-generated `<ProjectName>_UnityScript.cs` glue file placed alongside
+   it (macOS: inside the bundle's `Contents/Resources/`). These default
+   install locations are **not** a Unity project's `Assets/Plugins/` — pass
+   `UNITY_COPY_DIR "<path-to-unity-project>/Assets/Plugins"` to
+   `juce_add_plugin(...)` if you know the target project's path, so the
+   build lands the plugin + script directly where Unity will discover them.
+5. Confirmed by the same test build: the default Apple bundle install path
+   (no `XCODE_ATTRIBUTE_INSTALL_PATH` override needed for `_Unity`, unlike
+   the `_VST3`/`_Standalone` overrides already present in generated
+   `CMakeLists.txt` files) worked correctly out of the box — no fix needed
+   there.
+
+## Cross-platform CMake snippets
+
+Canonical patterns for anything a generated plugin's `CMakeLists.txt` needs
+to work identically on macOS, Windows, and Linux. Use these verbatim (adapted
+to the plugin's own `PROJECT_NAME`/`TORCH_LIBRARIES` etc.) rather than
+re-deriving them — the versions below fix real cross-platform gaps found in
+earlier generated plugins.
+
+**libtorch venv detection** (checks both Unix and Windows venv layouts):
+```cmake
+if(DEFINED ENV{TORCH_CMAKE_PREFIX_PATH})
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{TORCH_CMAKE_PREFIX_PATH}")
+else()
+    file(GLOB _torch_venv_cmake
+        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/lib/python3.*/site-packages/torch/share/cmake"  # Unix
+        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/Lib/site-packages/torch/share/cmake")            # Windows
+    if(_torch_venv_cmake)
+        list(APPEND CMAKE_PREFIX_PATH "${_torch_venv_cmake}")
+    endif()
+endif()
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+```
+(An earlier version of this snippet, still present in some already-generated
+local plugin dirs, only had the Unix glob — `find_package(Torch)` silently
+found nothing on Windows unless `TORCH_CMAKE_PREFIX_PATH` was set manually.)
+
+**Windows torch DLL copy** (loop over every built format, not just `_Standalone`):
+```cmake
+if(MSVC)
+    file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+    foreach(_fmt ${PLUGIN_FORMATS})
+        if(TARGET ${PROJECT_NAME}_${_fmt})
+            add_custom_command(TARGET ${PROJECT_NAME}_${_fmt} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${TORCH_DLLS}
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}_${_fmt}>)
+        endif()
+    endforeach()
+endif()
+```
+(An earlier version only copied DLLs next to `_Standalone`, leaving `_VST3`/
+other Windows formats unable to find libtorch at runtime.)
 
 ## graphify
 
