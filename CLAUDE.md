@@ -172,6 +172,25 @@ autoencoder — `forward(x) = decode(encode(x))`, shape-preserving
 registered buffers (no explicit reset method needed, unlike S-RAVE) — the
 simplest of the neural-FX integration patterns in this repo so far.
 
+**No instrument-specific checkpoint always exists.** Confirmed on Voice To
+Cello (a "convert my voice to a cello sound" request): there is no public
+cello-only RAVE checkpoint anywhere — checked IRCAM's own forum API
+(`play.forum.ircam.fr/rave-vst-api/get_available_models`, which lists every
+model IRCAM currently hosts), Hugging Face, and community repos. When the
+requested instrument/timbre isn't covered, look for the closest real,
+verified checkpoint rather than stalling — `musicnet` (trained on the
+MusicNet dataset of solo/chamber classical recordings: cello, violin,
+piano, winds) was the closest available, and its calling convention is
+identical to the guitar checkpoint above (same `encode_params`/
+`decode_params` shape, `forward(x) = decode(encode(x), true)`). Tell the
+user explicitly that the result leans "melodic chamber ensemble" rather
+than isolated cello, since no model constrains it to one instrument.
+Also worth knowing generally: these RAVE checkpoints' raw output level can
+run ~20-30dB below the input's for typical program material (verified by
+feeding a 0.3-amplitude test tone and measuring the output range before
+wiring up gain staging) — add a makeup-gain parameter rather than assuming
+unity output level.
+
 ## Pretrained models with a narrower usable range than their raw input allows
 
 When wrapping a pretrained analysis model (pitch tracker, classifier, etc.)
