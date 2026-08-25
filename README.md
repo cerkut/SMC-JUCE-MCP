@@ -92,10 +92,8 @@ Windows (`Lib/site-packages/...`) venv layouts.
 **From a prompt.** Describe the DSP/behavior you want. Claude scaffolds a new
 project from `JUCE-Plugin-Starter` via `juce-agent-toolkit`'s creation
 script, implements it, and builds/tests it. For example, asking for "a
-real-time pitch tracker built around [PESTO](https://github.com/SonyCSLParis/pesto)"
-produced Pesto Pitch Tracker — a monophonic pitch tracker with Standalone
-and Unity builds, described further in "Building a generated plugin" below.
-The scaffolding step behind that looks like:
+real-time pitch tracker" is how Pesto Pitch Tracker (see below) got its
+name and UI; the scaffolding step behind any such prompt looks like:
 
 ```bash
 python3 juce-agent-toolkit/shared/scripts/create_project.py "Pesto Pitch Tracker" \
@@ -110,15 +108,21 @@ repo" above). (Windows note: this needs `python3` specifically on `PATH`,
 not just `python` — see "Windows/Linux notes" below if it's not found.)
 
 **From an arXiv paper + its code.** Point at a paper and its companion GitHub
-repo — e.g. `arxiv:2408.16546` and
-[abargum/vc-sd-reproduction](https://github.com/abargum/vc-sd-reproduction) —
-and Claude will: ingest the paper and clone+ingest the repo into this
-project's graphify knowledge graph, read the actual source to learn the
-model's real calling convention (sample rate, statefulness, named methods),
-then scaffold and implement a plugin around it. See `CLAUDE.md` for the exact
-graphify commands and the real-time-safety pattern used (a background worker
-thread decoupled from the audio thread via a lock-protected queue — needed
-whenever model inference is too slow to run inline in `processBlock`).
+repo — e.g. `arxiv:2309.02265` (PESTO: Pitch Estimation with
+Self-supervised Transposition-equivariant Objective, extended in
+`arxiv:2508.01488`) and its companion repo
+[SonyCSLParis/pesto](https://github.com/SonyCSLParis/pesto) — and Claude
+will: ingest the paper and clone+ingest the repo into this project's
+graphify knowledge graph, read the actual source to learn the model's real
+calling convention (sample rate, statefulness, named methods), then
+scaffold and implement a plugin around it. This is exactly how Pesto Pitch
+Tracker was built: PESTO's TorchScript export was traced at a fixed
+44.1kHz/441-sample chunk size, so the processor resamples host audio to
+match and runs inference on a background thread decoupled from
+`processBlock` via a lock-protected queue — the general real-time-safety
+pattern this path always needs whenever model inference is too slow to run
+inline on the audio thread. See `CLAUDE.md` for the exact graphify commands
+and that pattern in more detail.
 
 **Targeting Unity.** In addition to VST3/AU/Standalone, a generated plugin
 can build as a Unity native audio plugin — no separate Unity SDK or Editor
