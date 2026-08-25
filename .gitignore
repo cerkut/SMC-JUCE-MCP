@@ -1,8 +1,17 @@
 # macOS
 .DS_Store
 
-# Local knowledge-graph cache (regenerate with `graphify update .`)
-graphify-out/
+# graphify harness: keep the portable, queryable graph artifacts committed
+# (graph.json, GRAPH_REPORT.md, graph.html, labels) so a fresh clone on
+# another machine has the knowledge graph without needing to regenerate it.
+# Exclude machine-specific absolute paths, regenerable local caches, and
+# dated snapshot backups — none of these help reproduce the repo elsewhere.
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.DS_Store
+graphify-out/cache/
+graphify-out/.graphify_analysis.json
+graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
 
 # graphify's `add` scratch dir (holds fetched papers/pages before merging into the graph)
 raw/
@@ -20,6 +29,8 @@ raw/
 demo-plugin/
 steinmetz-reverb/
 s-rave/
+pesto-pitch-tracker/
+simple-ann/
 
 # Not a submodule — a Pure Data/plugdata skill unrelated to JUCE plugin
 # generation. Clone separately if wanted: github.com/shortwavlabs/agent-skills

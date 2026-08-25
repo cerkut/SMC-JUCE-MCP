@@ -79,6 +79,13 @@ itself (`juce_audio_plugin_client_Unity.cpp` +
    inside Unity. `PROJECT_NAME` (the folder/CMake target name) can keep its
    hyphen; only `PRODUCT_NAME` needs to change if they're set to different
    values.
+   - **Same rule applies to `AU_EXPORT_PREFIX`** on macOS, independent of
+     Unity: if it's set to `"${PROJECT_NAME}AU"` and `PROJECT_NAME` is
+     hyphenated, the AU target fails to compile (`AU_EXPORT_PREFIX` is used
+     verbatim as a C symbol/macro name, and hyphens aren't legal there
+     either). Confirmed on Pesto Pitch Tracker. Set `AU_EXPORT_PREFIX`
+     explicitly to a hyphen-free string (e.g. the same value as
+     `PRODUCT_NAME` + `"AU"`), not derived from `PROJECT_NAME`.
 3. Keep the plugin a pure audio effect — `IS_MIDI_EFFECT FALSE`,
    `NEEDS_MIDI_INPUT/OUTPUT FALSE` (already how every plugin generated here
    is configured; Unity's native audio callback has no MIDI path).
@@ -96,6 +103,61 @@ itself (`juce_audio_plugin_client_Unity.cpp` +
    the `_VST3`/`_Standalone` overrides already present in generated
    `CMakeLists.txt` files) worked correctly out of the box — no fix needed
    there.
+
+## Any plugin that reads live microphone/audio input
+
+If the plugin's `processBlock` is meant to analyze or process **live input**
+(not just host playback — a pitch tracker, a voice-conversion plugin, a mic
+effect), add `MICROPHONE_PERMISSION_ENABLED TRUE` and a
+`MICROPHONE_PERMISSION_TEXT "..."` to the `juce_add_plugin(...)` call.
+**Confirmed twice** (S-RAVE, Pesto Pitch Tracker) that skipping this is a
+silent failure, not an error: without `NSMicrophoneUsageDescription` in the
+built `Info.plist`, macOS never prompts for mic access, so the Standalone app
+launches fine, the UI looks fine, and `processBlock` just receives silence
+forever — no crash, no error message, nothing to grep in logs. Verify by
+checking the built `Info.plist` (`plutil -p .../Info.plist | grep -i
+microphone`) before telling the user to test with real input. If a plugin
+was already built without this and the user reports "nothing happens with
+mic input", add the flag, rebuild, and run
+`tccutil reset Microphone <bundle-id>` (bundle ID is in the same `Info.plist`)
+so the next launch re-prompts instead of silently reusing a stale denial.
+
+## Pretrained models with a narrower usable range than their raw input allows
+
+When wrapping a pretrained analysis model (pitch tracker, classifier, etc.)
+that was trained on a specific content domain, its *architectural* input
+range (e.g. a CQT's fmin/fmax) can be much wider than the range it actually
+produces confident/correct output for — the two are easy to conflate.
+**Confirmed on Pesto Pitch Tracker**: the `mir-1k_g7` checkpoint (PESTO,
+trained on the MIR-1K *singing voice* dataset) has a CQT input range up to
+~4.2kHz, but empirically its confidence output collapses to ~0 above
+~1.2kHz — it was never trained on content that high, even though nothing
+stops you from feeding it there. The user-visible symptom was "pitch
+tracking doesn't work for whistling" (typical whistle pitch is 1-3kHz),
+which looked like a bug but was actually the model working exactly as
+trained, on the wrong input range.
+
+Diagnose this by testing the exported model directly against synthetic
+sine tones spanning the range you actually need (not just the range you
+assumed), and inspect both the estimate and the confidence/probability
+output — a wrong-but-confident estimate and a right-but-unconfident one
+are different failure modes needing different fixes:
+```python
+model = torch.jit.load("model.pt")
+for f in [220, 440, 800, 1000, 1500, 2000, 2500, 3000]:
+    # feed chunk-sized synthetic sine at f, print (recovered_hz, confidence)
+```
+If confidence craters well before the input range's theoretical limit, one
+fix (verified working here) is an **octave-shift trick**: resample the
+audio fed to the model so a true frequency `f` appears to it as `f / N`
+(inside its confident range), then multiply the model's output by `N` to
+recover the true frequency. Concretely: resample to `N ×` the model's
+native rate before chunking (so each fixed-size chunk spans `1/N` the real
+time, containing `1/N` the cycles a true `f` would normally produce), and
+multiply the recovered Hz by `N` on the way out. This is a real-content
+transform (like the host-rate→model-rate resampling every neural-FX plugin
+here already does), not a hack specific to any one model — same technique
+applies to any narrow-range pretrained analyzer.
 
 ## Cross-platform CMake snippets
 
