@@ -18,11 +18,14 @@ README.md).
 
 ## Generating a plugin
 
-Three paths, all ending the same way: a new top-level `<plugin-name>/`
-directory scaffolded from `JUCE-Plugin-Starter/`, built with CMake/Ninja, and
-tested with Catch2. Works the same way on macOS, Windows, and Linux — see
-"Cross-platform CMake snippets" below for the canonical patterns any
-neural-FX plugin needs to actually build on all three.
+Three paths, all ending the same way: a new `<plugin-name>/` directory
+scaffolded from `JUCE-Plugin-Starter/` as a **sibling of this repo** (one
+level up — see `--destination-parent ..` below), built with CMake/Ninja, and
+tested with Catch2. Scaffolding outside this working tree is deliberate: it
+means a generated project never needs its own `.gitignore` entry here. Works
+the same way on macOS, Windows, and Linux — see "Cross-platform CMake
+snippets" below for the canonical patterns any neural-FX plugin needs to
+actually build on all three.
 
 Use `uv` for any Python tooling a generated plugin or this workflow needs
 (`uv venv`, `uv pip install`, `uv tool install`) — not plain `pip`/
@@ -33,7 +36,7 @@ commands.
 ```bash
 python3 juce-agent-toolkit/shared/scripts/create_project.py "Plugin Name" \
   --starter ./JUCE-Plugin-Starter \
-  --destination-parent . \
+  --destination-parent .. \
   --developer-name "<name>"
 ```
 then implement the processor/editor, build (`cmake -B build -G Ninja` inside

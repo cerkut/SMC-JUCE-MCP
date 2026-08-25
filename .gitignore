@@ -23,14 +23,10 @@ raw/
 # Local build scratch
 .audiopluginhost-build/
 
-# Generated plugin projects are local build artifacts — never committed.
-# Regenerate them from a prompt (see README/CLAUDE.md) rather than restoring
-# from git history.
-demo-plugin/
-steinmetz-reverb/
-s-rave/
-pesto-pitch-tracker/
-simple-ann/
+# Generated plugin projects are scaffolded one level up from this repo (see
+# "Generating a plugin" in README.md — create_project.py's
+# --destination-parent points at ..), so they never land inside this working
+# tree and never need a per-project entry here.
 
 # Not a submodule — a Pure Data/plugdata skill unrelated to JUCE plugin
 # generation. Clone separately if wanted: github.com/shortwavlabs/agent-skills

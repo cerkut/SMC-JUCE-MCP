@@ -6,8 +6,11 @@ description, by pointing at an arXiv paper and its companion GitHub repo, or
 targeting Unity's native audio plugin format in addition to VST3/AU/Standalone.
 
 Clone it, initialize the required submodules, open Claude Code inside it, and
-ask for a plugin. Generated plugin projects are local build artifacts —
-gitignored, never committed here. Works on macOS, Windows, and Linux.
+ask for a plugin. Generated plugin projects are local build artifacts,
+scaffolded as sibling directories one level up from this repo (see
+"Generating a plugin" below) — never inside it, so nothing needs a
+per-project `.gitignore` entry and nothing generated is ever committed here.
+Works on macOS, Windows, and Linux.
 
 ## Quick start
 
@@ -29,8 +32,10 @@ see "Generating a plugin" below.
 | `CLAUDE.md` | Instructions for Claude Code: the generation paths, the canonical cross-platform CMake snippets, and how this project's graphify knowledge graph works. |
 | `.graphifyignore` | Excludes generated plugins and large vendored/optional submodules from graphify indexing. |
 
-Anything you generate (e.g. a new `my-plugin/` directory) lives alongside
-these but is gitignored — it's output, not part of the generator.
+Anything you generate (e.g. a new `pesto-pitch-tracker/` directory) is
+scaffolded as a sibling of this repo, one level up — it's output, not part
+of the generator, and living outside this working tree means it never needs
+a `.gitignore` entry here.
 
 ## Prerequisites
 
@@ -86,16 +91,23 @@ Windows (`Lib/site-packages/...`) venv layouts.
 
 **From a prompt.** Describe the DSP/behavior you want. Claude scaffolds a new
 project from `JUCE-Plugin-Starter` via `juce-agent-toolkit`'s creation
-script, implements it, and builds/tests it:
+script, implements it, and builds/tests it. For example, asking for "a
+real-time pitch tracker built around [PESTO](https://github.com/SonyCSLParis/pesto)"
+produced Pesto Pitch Tracker — a monophonic pitch tracker with Standalone
+and Unity builds, described further in "Building a generated plugin" below.
+The scaffolding step behind that looks like:
 
 ```bash
-python3 juce-agent-toolkit/shared/scripts/create_project.py "Your Plugin Name" \
+python3 juce-agent-toolkit/shared/scripts/create_project.py "Pesto Pitch Tracker" \
   --starter ./JUCE-Plugin-Starter \
-  --destination-parent . \
+  --destination-parent .. \
   --developer-name "Your Name"
 ```
-(Windows note: this needs `python3` specifically on `PATH`, not just
-`python` — see "Windows/Linux notes" below if it's not found.)
+`--destination-parent ..` scaffolds the new project as a sibling of this
+repo rather than inside it — the convention this repo uses so generated
+projects never need their own `.gitignore` entry here (see "What's in this
+repo" above). (Windows note: this needs `python3` specifically on `PATH`,
+not just `python` — see "Windows/Linux notes" below if it's not found.)
 
 **From an arXiv paper + its code.** Point at a paper and its companion GitHub
 repo — e.g. `arxiv:2408.16546` and
@@ -123,9 +135,9 @@ format list.
 ## Building a generated plugin
 
 ```bash
-cd your-plugin-name
+cd ../pesto-pitch-tracker      # scaffolded as a sibling of this repo — see above
 cmake -B build -G Ninja
-cmake --build build --target <ProjectName>_Standalone
+cmake --build build --target PestoPitchTracker_Standalone
 ```
 
 This is the cross-platform path (works identically on macOS/Windows/Linux
@@ -166,7 +178,7 @@ Not included at all: **agent-skills** ([shortwavlabs/agent-skills](https://githu
 
 ## Extending
 
-### Using `book-to-skill`
+### Using [`book-to-skill`](https://github.com/virgiliojr94/book-to-skill)
 
 `book-to-skill` converts a document (PDF, EPUB, or plain text) into a
 structured Claude Code skill — extracting frameworks, techniques, and
@@ -181,7 +193,7 @@ and run:
 /book-to-skill <path-to-document> [skill-name-slug]
 ```
 
-### Using `graphify`
+### Using [`graphify`](https://github.com/safishamsi/graphify)
 
 `graphify` turns a folder of code and docs into a queryable knowledge
 graph — community structure, cross-file relationships, and an honest
