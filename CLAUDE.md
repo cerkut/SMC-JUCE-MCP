@@ -45,9 +45,14 @@ and write Catch2 tests that actually push real audio through `processBlock`
 and check for NaN/Inf and no exceptions — not just construction.
 
 **From an arXiv paper + companion GitHub repo.** When the user points at a
-paper (e.g. `arxiv:2408.16546`) and its code (e.g.
-`https://github.com/abargum/vc-sd-reproduction`):
-1. `graphify add arxiv:<id>` — ingests the paper's abstract/metadata into the graph.
+paper (e.g. `arxiv:2309.02265`, PESTO) and its code (e.g.
+`https://github.com/SonyCSLParis/pesto`):
+1. `graphify add https://arxiv.org/abs/<id>` — ingests the paper's
+   abstract/metadata into the graph. **Use the `https://arxiv.org/abs/<id>`
+   form, not the bare `arxiv:<id>` scheme** — confirmed the CLI's URL
+   validator rejects `arxiv:` outright ("Blocked URL scheme 'arxiv' — only
+   http and https are allowed"), even though the scheme is used informally
+   elsewhere in this doc and in conversation to refer to a paper.
 2. `graphify clone <github-url>` — clones the companion repo locally, then run
    AST + semantic extraction on it and merge it into the graph as its own
    repo namespace (see `## graphify` below — this graph is a cross-repo merged
@@ -63,6 +68,20 @@ paper (e.g. `arxiv:2408.16546`) and its code (e.g.
    inference via a lock-protected queue + a background `juce::Thread` worker;
    never call `torch::jit::script::Module` methods directly on the audio
    thread if inference could be slow.
+
+Confirmed twice with real pitch-tracking models (PESTO → Pesto Pitch
+Tracker, CREPE via `github.com/maxrmorrison/torchcrepe` → Crepe Pitch
+Tracker): bake normalization, decoding, and unit conversion into the traced
+TorchScript export itself (not left for C++ to reimplement) so the plugin's
+`forward()` call is a single opaque step — raw audio samples in, `(hz,
+confidence)` out. The two models needed different feed shapes despite both
+being pitch trackers: PESTO takes small non-overlapping chunks (441 samples
+@44.1kHz) fed directly; CREPE takes a much longer window (1024 samples
+@16kHz) relative to a sensible hop (160 samples), so consecutive inference
+windows *overlap* — the worker thread must maintain a rolling window buffer
+sliding by one hop per iteration, not just clear-and-refill a queue. Always
+confirm which shape a new model needs by reading its actual preprocessing
+code rather than assuming one pattern fits all pitch trackers.
 
 **Targeting Unity.** `Unity` is a first-class, built-in `FORMATS` value for
 JUCE's `juce_add_plugin()` (confirmed against the JUCE 8.0.12 this repo
@@ -170,14 +189,22 @@ to the plugin's own `PROJECT_NAME`/`TORCH_LIBRARIES` etc.) rather than
 re-deriving them — the versions below fix real cross-platform gaps found in
 earlier generated plugins.
 
-**libtorch venv detection** (checks both Unix and Windows venv layouts):
+**libtorch venv detection** (checks both Unix and Windows venv layouts, and
+both the old in-repo location and the current sibling-of-repo location — see
+"Generating a plugin" above: generated projects scaffold as siblings of this
+repo via `--destination-parent ..`, so `.libtorch-venv` normally lives inside
+*some* sibling directory, e.g. `../JUCE-MCP/.libtorch-venv`, not directly in
+`..` — the wildcard middle path segment below matches that regardless of what
+the generator repo's clone directory happens to be named):
 ```cmake
 if(DEFINED ENV{TORCH_CMAKE_PREFIX_PATH})
     list(APPEND CMAKE_PREFIX_PATH "$ENV{TORCH_CMAKE_PREFIX_PATH}")
 else()
     file(GLOB _torch_venv_cmake
-        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/lib/python3.*/site-packages/torch/share/cmake"  # Unix
-        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/Lib/site-packages/torch/share/cmake")            # Windows
+        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/lib/python3.*/site-packages/torch/share/cmake"    # Unix, old in-repo layout
+        "${CMAKE_SOURCE_DIR}/../.libtorch-venv/Lib/site-packages/torch/share/cmake"               # Windows, old in-repo layout
+        "${CMAKE_SOURCE_DIR}/../*/.libtorch-venv/lib/python3.*/site-packages/torch/share/cmake"  # Unix, sibling generator repo
+        "${CMAKE_SOURCE_DIR}/../*/.libtorch-venv/Lib/site-packages/torch/share/cmake")            # Windows, sibling generator repo
     if(_torch_venv_cmake)
         list(APPEND CMAKE_PREFIX_PATH "${_torch_venv_cmake}")
     endif()
@@ -187,7 +214,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 ```
 (An earlier version of this snippet, still present in some already-generated
 local plugin dirs, only had the Unix glob — `find_package(Torch)` silently
-found nothing on Windows unless `TORCH_CMAKE_PREFIX_PATH` was set manually.)
+found nothing on Windows unless `TORCH_CMAKE_PREFIX_PATH` was set manually.
+A later version only checked the old in-repo `../.libtorch-venv` path, which
+silently stopped matching anything once generated plugins moved to being
+scaffolded as repo siblings rather than repo children — confirmed on Crepe
+Pitch Tracker.)
 
 **Windows torch DLL copy** (loop over every built format, not just `_Standalone`):
 ```cmake
