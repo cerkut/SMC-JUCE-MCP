@@ -164,6 +164,41 @@ git submodule update --init JuceMCP-for-agents         # JUCE class-docs MCP ser
 
 Not included at all: **agent-skills** ([shortwavlabs/agent-skills](https://github.com/shortwavlabs/agent-skills)) — a Pure Data/plugdata patch-generation skill, a different (non-JUCE) audio environment.
 
+## Extending
+
+### Using `book-to-skill`
+
+`book-to-skill` converts a document (PDF, EPUB, or plain text) into a
+structured Claude Code skill — extracting frameworks, techniques, and
+reference material into chapter files an agent can load on demand, rather
+than a plain summary. Point it at JUCE's own tutorials/reference material, a
+DSP textbook, or any other audio-programming reference to produce a skill
+that complements what the MCP servers above already provide (live class-doc
+lookup vs. curated conceptual knowledge). Install it as a Claude Code skill
+and run:
+
+```
+/book-to-skill <path-to-document> [skill-name-slug]
+```
+
+### Using `graphify`
+
+`graphify` turns a folder of code and docs into a queryable knowledge
+graph — community structure, cross-file relationships, and an honest
+EXTRACTED/INFERRED/AMBIGUOUS audit trail. Run it against this repo, or
+against a full JUCE checkout, to get a graph an agent can query directly
+instead of re-reading source on every question:
+
+```
+uv tool install graphifyy
+/graphify .
+/graphify query "How does docs-source switching work?"
+```
+
+Wiring `graphify` into a project's `CLAUDE.md` (so an agent checks the graph
+before raw grepping) is a one-time setup step described in the tool's own
+skill instructions.
+
 ## License
 
 Not yet chosen for this repo's own content. Each submodule is governed by its
