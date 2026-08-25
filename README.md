@@ -111,17 +111,22 @@ not just `python` — see "Windows/Linux notes" below if it's not found.)
 repo — e.g. `arxiv:2309.02265` (PESTO: Pitch Estimation with
 Self-supervised Transposition-equivariant Objective, extended in
 `arxiv:2508.01488`) and its companion repo
-[SonyCSLParis/pesto](https://github.com/SonyCSLParis/pesto) — and Claude
-will: ingest the paper and clone+ingest the repo into this project's
-graphify knowledge graph, read the actual source to learn the model's real
+[SonyCSLParis/pesto](https://github.com/SonyCSLParis/pesto) , and Claude
+will: 
+* ingest the paper and clone+ingest the repo into this project's
+graphify knowledge graph,
+* read the actual source to learn the model's real
 calling convention (sample rate, statefulness, named methods), then
-scaffold and implement a plugin around it. This is exactly how Pesto Pitch
-Tracker was built: PESTO's TorchScript export was traced at a fixed
+* scaffold and implement a plugin around it.
+
+This is exactly how Pesto Pitch Tracker was built: PESTO's TorchScript export was traced at a fixed
 44.1kHz/441-sample chunk size, so the processor resamples host audio to
 match and runs inference on a background thread decoupled from
-`processBlock` via a lock-protected queue — the general real-time-safety
+`processBlock` via a lock-protected queue: the general real-time-safety
 pattern this path always needs whenever model inference is too slow to run
-inline on the audio thread. See `CLAUDE.md` for the exact graphify commands
+inline on the audio thread. 
+
+See `CLAUDE.md` for the exact graphify commands
 and that pattern in more detail.
 
 **Targeting Unity.** In addition to VST3/AU/Standalone, a generated plugin
