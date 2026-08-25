@@ -144,6 +144,34 @@ mic input", add the flag, rebuild, and run
 `tccutil reset Microphone <bundle-id>` (bundle ID is in the same `Info.plist`)
 so the next launch re-prompts instead of silently reusing a stale denial.
 
+## Verify a pretrained checkpoint actually downloads before committing to it
+
+READMEs go stale. **Confirmed on Torch DDSP**: both `acids-ircam/ddsp_pytorch`'s
+documented pretrained checkpoints (saxophone, violin — IRCAM Nubo share
+links) and the repo literally named `torch-ddsp`
+(`github.com/chloelavrat/torch-ddsp`, no `train.py`/`export.py`/weights at
+all, explicitly "in re-development") turned out to have **no usable
+checkpoint whatsoever** — the Nubo links 404, no mirror, no GitHub release.
+Before scaffolding a plugin around any pretrained-model source: actually
+`curl -L -o /tmp/test.ext <url>` (or equivalent) and confirm it's the real
+file (right size, right magic bytes — a 404 page saved to a `.ts` file is a
+few KB of HTML, not tens/hundreds of MB of binary), not just that the
+README *mentions* a download link. If nothing pans out, tell the user and
+let them choose: train a quick demo checkpoint, use a different source
+repo/checkpoint, or proceed with untrained weights — don't silently
+fabricate or substitute. For Torch DDSP the resolution was substituting a
+different but task-equivalent architecture with real, live checkpoints:
+[RAVE](https://github.com/acids-ircam/RAVE) (same IRCAM ACIDS team, same
+real-time timbre-transfer use case, a VAE rather than a DDSP harmonic+noise
+synthesizer) via a checkpoint from
+`huggingface.co/Intelligent-Instruments-Lab/rave-models`. RAVE's exported
+TorchScript module is a genuinely simple, fully self-contained streaming
+autoencoder — `forward(x) = decode(encode(x))`, shape-preserving
+(`(1,1,N)` in and out, `N` = the checkpoint's trained buffer size, e.g.
+2048 in a `..._b2048_...` filename), stateful across calls via its own
+registered buffers (no explicit reset method needed, unlike S-RAVE) — the
+simplest of the neural-FX integration patterns in this repo so far.
+
 ## Pretrained models with a narrower usable range than their raw input allows
 
 When wrapping a pretrained analysis model (pitch tracker, classifier, etc.)
