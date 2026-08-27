@@ -39,10 +39,33 @@ python3 juce-agent-toolkit/shared/scripts/create_project.py "Plugin Name" \
   --destination-parent .. \
   --developer-name "<name>"
 ```
+**Confirmed on macOS**: the system `/usr/bin/python3` can be old enough
+(3.9) that `create_project.py`'s own `from find_starter_repo import locate`
+fails with `TypeError: unsupported operand type(s) for |: 'type' and
+'NoneType'` — `find_starter_repo.py` uses `Path | None` union-type syntax,
+which needs Python 3.10+. Confirm with `python3 --version` first; if it's
+older, run the script with a newer interpreter instead of trying to fix the
+toolkit script (it's a submodule): `uv run --python
+$(uv python find 3.12 2>/dev/null || echo /opt/homebrew/bin/python3)
+juce-agent-toolkit/shared/scripts/create_project.py ...`, or any other
+3.10+ interpreter on the machine.
+
 then implement the processor/editor, build (`cmake -B build -G Ninja` inside
 the new project dir, then `cmake --build build --target <Name>_Standalone`),
 and write Catch2 tests that actually push real audio through `processBlock`
-and check for NaN/Inf and no exceptions — not just construction.
+and check for NaN/Inf and no exceptions — not just construction. For DSP
+whose whole point is a specific frequency/amplitude behavior (an EQ, a
+compressor, a filter), a passing NaN-check test doesn't confirm the plugin
+does what it claims — also assert the actual behavior, e.g. feed a sine at
+a target frequency and check steady-state RMS moved by the expected amount,
+and feed a sine far from any targeted band and confirm it *didn't* move
+(confirmed on Torch Parametric EQ: a 3-band parametric EQ whose coefficient
+design is the standard RBJ Audio EQ Cookbook math in C++, but whose actual
+recursive IIR filtering runs through a TorchScript-exported biquad cascade
+that carries `[x1,x2,y1,y2]` state across `processBlock` calls the same way
+the LSTM plugin carries hidden state — cheap enough per block to call
+synchronously on the audio thread, no worker thread needed unlike the
+TCN-reverb pattern below).
 
 **From an arXiv paper + companion GitHub repo.** When the user points at a
 paper (e.g. `arxiv:2309.02265`, PESTO) and its code (e.g.
