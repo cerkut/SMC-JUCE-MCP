@@ -8,8 +8,7 @@ targeting Unity's native audio plugin format in addition to VST3/AU/Standalone.
 Clone it, initialize the required submodules, open Claude Code inside it, and
 ask for a plugin. Generated plugin projects are local build artifacts,
 scaffolded as sibling directories one level up from this repo (see
-"Generating a plugin" below) — never inside it, so nothing needs a
-per-project `.gitignore` entry and nothing generated is ever committed here.
+[Generating a plugin](https://github.com/cerkut/SMC-JUCE-MCP#generating-a-plugin) below).
 Works on macOS, Windows, and Linux.
 
 ## Quick start
@@ -118,13 +117,6 @@ graphify knowledge graph,
 * read the actual source to learn the model's real
 calling convention (sample rate, statefulness, named methods), then
 * scaffold and implement a plugin around it.
-
-This is exactly how Pesto Pitch Tracker was built: PESTO's TorchScript export was traced at a fixed
-44.1kHz/441-sample chunk size, so the processor resamples host audio to
-match and runs inference on a background thread decoupled from
-`processBlock` via a lock-protected queue: the general real-time-safety
-pattern this path always needs whenever model inference is too slow to run
-inline on the audio thread. 
 
 See `CLAUDE.md` for the exact graphify commands
 and that pattern in more detail.
