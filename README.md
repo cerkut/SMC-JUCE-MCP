@@ -59,9 +59,12 @@ Then, per platform:
   workload, plus CMake/Ninja via `winget install cmake ninja` — or run
   `JUCE-Plugin-Starter/scripts/dependencies.sh` from Git Bash/WSL once that
   submodule is initialized, which handles this automatically.
-- **Linux**: `sudo apt install cmake ninja-build clang` plus JUCE's own
-  library dependencies — or run `JUCE-Plugin-Starter/scripts/dependencies.sh`,
-  which installs everything needed in one pass.
+- **Linux**: `sudo apt install cmake ninja-build clang libxi-dev libegl-dev`
+  plus JUCE's other library dependencies — or run
+  `JUCE-Plugin-Starter/scripts/dependencies.sh`, which installs everything
+  needed in one pass. `libxi-dev`/`libegl-dev` are required as of JUCE 9
+  (XInput enabled by default; Linux OpenGL context creation moved from GLX
+  to EGL) — see "JUCE version: 9.0.3" in CLAUDE.md.
 - **[graphify](https://github.com/safishamsi/graphify)** — used for the
   arXiv-paper/companion-repo generation path (see below); auto-installed by
   its own Claude Code skill on first use if you have one configured, or
@@ -139,6 +142,7 @@ format list.
 
 ```bash
 cd ../pesto-pitch-tracker      # scaffolded as a sibling of this repo — see above
+export JUCE_TAG=9.0.3          # pin JUCE version; Windows (PowerShell): $env:JUCE_TAG = "9.0.3"
 cmake -B build -G Ninja
 cmake --build build --target PestoPitchTracker_Standalone
 ```

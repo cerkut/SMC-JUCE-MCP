@@ -50,8 +50,15 @@ $(uv python find 3.12 2>/dev/null || echo /opt/homebrew/bin/python3)
 juce-agent-toolkit/shared/scripts/create_project.py ...`, or any other
 3.10+ interpreter on the machine.
 
-then implement the processor/editor, build (`cmake -B build -G Ninja` inside
-the new project dir, then `cmake --build build --target <Name>_Standalone`),
+then implement the processor/editor, build with JUCE pinned to **9.0.3**
+(`JUCE-Plugin-Starter/CMakeLists.txt` reads the `JUCE_TAG`/`JUCE_REPO`
+environment variables via `FetchContent`, defaulting to an older JUCE if
+unset — always export the pin before configuring):
+```bash
+export JUCE_TAG=9.0.3   # Windows (PowerShell): $env:JUCE_TAG = "9.0.3"
+cmake -B build -G Ninja
+cmake --build build --target <Name>_Standalone
+```
 and write Catch2 tests that actually push real audio through `processBlock`
 and check for NaN/Inf and no exceptions — not just construction. For DSP
 whose whole point is a specific frequency/amplitude behavior (an EQ, a
@@ -107,8 +114,11 @@ confirm which shape a new model needs by reading its actual preprocessing
 code rather than assuming one pattern fits all pitch trackers.
 
 **Targeting Unity.** `Unity` is a first-class, built-in `FORMATS` value for
-JUCE's `juce_add_plugin()` (confirmed against the JUCE 8.0.12 this repo
-pins) — no external Unity SDK or Editor download is needed to *build* it;
+JUCE's `juce_add_plugin()` (originally confirmed against JUCE 8.0.12; the
+`JUCE_TAG=9.0.3` pin above carries no breaking changes to plugin
+formats/`juce_add_plugin` per JUCE's own `BREAKING_CHANGES.md` for the
+8.1-9.0.3 range, so this still applies) — no external Unity SDK or Editor
+download is needed to *build* it;
 JUCE reimplements the necessary parts of Unity's Native Audio Plugin API
 itself (`juce_audio_plugin_client_Unity.cpp` +
 `Unity/juce_UnityPluginInterface.h`, both self-contained).
@@ -284,6 +294,32 @@ multiply the recovered Hz by `N` on the way out. This is a real-content
 transform (like the host-rate→model-rate resampling every neural-FX plugin
 here already does), not a hack specific to any one model — same technique
 applies to any narrow-range pretrained analyzer.
+
+## JUCE version: 9.0.3
+
+This repo targets **JUCE 9.0.3** (`export JUCE_TAG=9.0.3` before configuring
+— see "Generating a plugin" above). Per JUCE's own `BREAKING_CHANGES.md` for
+the 8.1-9.0.3 range:
+
+- **Linux**: `libxi-dev` and `libegl-dev` are now required (JUCE 9 defaults
+  to `JUCE_USE_XINPUT=1` and switched Linux OpenGL context creation from GLX
+  to EGL). Add both to the Linux prerequisites (`sudo apt install libxi-dev
+  libegl-dev`) alongside the existing cmake/ninja/clang install, or via
+  `JUCE-Plugin-Starter/scripts/dependencies.sh`. Skipping this is a build
+  failure, not a runtime one — it'll surface at `cmake --build` time on any
+  plugin whose editor uses `OpenGLContext` (e.g. `melatonin_inspector`),
+  not on every plugin, so don't assume a clean build elsewhere means these
+  are already installed everywhere.
+- `SystemStats::isOperatingSystem64Bit()` now reports OS architecture
+  instead of process architecture — if a generated processor/editor branches
+  on it, switch to the `JUCE_64BIT`/`JUCE_32BIT` build-config macros instead.
+- `Drawable` no longer inherits from `Component`; a generated editor that
+  parents a `Drawable` directly into the component tree needs to wrap it in
+  the new `DrawableComponent` instead.
+- No breaking changes were introduced to `juce_add_plugin()`, plugin
+  `FORMATS` (including `Unity`), or the CMake plugin-target API in this
+  range — the Unity and `AU_EXPORT_PREFIX` guidance above still applies
+  unchanged.
 
 ## Cross-platform CMake snippets
 
