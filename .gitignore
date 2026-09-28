@@ -23,6 +23,9 @@ raw/
 # Local build scratch
 .audiopluginhost-build/
 
+# Cached pluginval binary downloaded by scripts/run_pluginval.sh
+.pluginval-cache/
+
 # Generated plugin projects are scaffolded one level up from this repo (see
 # "Generating a plugin" in README.md — create_project.py's
 # --destination-parent points at ..), so they never land inside this working

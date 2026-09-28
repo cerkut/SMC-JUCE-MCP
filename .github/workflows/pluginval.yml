@@ -1,0 +1,33 @@
+name: pluginval
+
+# This repo is a generator shell (see CLAUDE.md) — generated plugin projects
+# are gitignored local build artifacts, not part of this repository. This
+# workflow is triggered manually (or from a generated plugin's own CI) and
+# validates a plugin built elsewhere in the same run/checkout via
+# scripts/run_pluginval.sh.
+on:
+  workflow_dispatch:
+    inputs:
+      plugin_path:
+        description: "Path to the built plugin bundle (.vst3/.component/.clap) relative to the repo root"
+        required: true
+      strictness:
+        description: "pluginval strictness level (1-10)"
+        required: false
+        default: "10"
+
+jobs:
+  validate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run pluginval
+        shell: bash
+        run: |
+          chmod +x scripts/run_pluginval.sh
+          scripts/run_pluginval.sh "${{ inputs.plugin_path }}" "${{ inputs.strictness }}"

@@ -30,6 +30,8 @@ see "Generating a plugin" below.
 | `juce-agent-toolkit/` (submodule, required) | Portable build/release workflow scripts — `shared/scripts/create_project.py` (scaffolding), `build_release.py`, and related tooling used to build, test, sign, and package a plugin. |
 | `CLAUDE.md` | Instructions for Claude Code: the generation paths, the canonical cross-platform CMake snippets, and how this project's graphify knowledge graph works. |
 | `.graphifyignore` | Excludes generated plugins and large vendored/optional submodules from graphify indexing. |
+| `scripts/run_pluginval.sh` | Validates a built plugin (VST3/AU/CLAP) with [Tracktion/pluginval](https://github.com/Tracktion/pluginval); auto-downloads a pinned pluginval release if none is on `PATH`. See "Plugin validation with pluginval" in CLAUDE.md. |
+| `.github/workflows/pluginval.yml` | Manually-triggered CI job running `scripts/run_pluginval.sh` against a given plugin path. |
 
 Anything you generate (e.g. a new `pesto-pitch-tracker/` directory) is
 scaffolded as a sibling of this repo, one level up — it's output, not part

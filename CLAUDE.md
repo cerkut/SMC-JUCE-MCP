@@ -149,6 +149,40 @@ itself (`juce_audio_plugin_client_Unity.cpp` +
    `CMakeLists.txt` files) worked correctly out of the box — no fix needed
    there.
 
+## Plugin validation with pluginval
+
+Beyond the Catch2 unit tests above, validate every generated plugin's actual
+VST3/AU binary against the host-compatibility checks in
+[Tracktion/pluginval](https://github.com/Tracktion/pluginval) before telling
+the user it's ready — Catch2 tests exercise `processBlock` in isolation, but
+pluginval catches host-facing issues (parameter automation, state
+save/restore, thread safety, editor lifecycle) that unit tests don't touch.
+
+Use `scripts/run_pluginval.sh` in this repo (not something to reimplement per
+plugin):
+```bash
+scripts/run_pluginval.sh <path-to-built-plugin> [strictness-level]
+# e.g.
+scripts/run_pluginval.sh ../pesto-pitch-tracker/build/PestoPitchTracker_artefacts/Release/VST3/PestoPitchTracker.vst3 10
+```
+It auto-downloads a pinned pluginval release into `.pluginval-cache/`
+(gitignored, cached across runs) if no `pluginval` binary is already on
+`PATH`, so no manual install step is required on macOS/Linux/Windows
+(Git Bash/WSL). Strictness defaults to 10 (max); drop to a lower level (e.g.
+5) only if a specific high-strictness check is a known false positive for a
+given plugin category, and say which check and why.
+
+Run it after every successful `cmake --build` that produces a VST3/AU/CLAP
+target, against the actual built bundle path (build output paths vary by
+generator/config — locate the real artefact under
+`build/<Target>_artefacts/...` rather than guessing). A clean pluginval pass
+is required before reporting the plugin done; if it fails, fix the underlying
+processor/editor issue pluginval reports rather than lowering strictness to
+make the failure disappear.
+
+For CI or scripted validation without a local checkout, `.github/workflows/pluginval.yml`
+runs the same script via `workflow_dispatch` against a plugin path.
+
 ## Any plugin that reads live microphone/audio input
 
 If the plugin's `processBlock` is meant to analyze or process **live input**
